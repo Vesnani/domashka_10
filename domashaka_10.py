@@ -66,10 +66,8 @@ class AddressBook(UserDict):
 def hello_func():
     return 'How can I help you?'
 
-
 def exit_func():
     return 'Good bye!'
-
 
 def add_func(address_book):
     name = input('Enter name: ')
@@ -89,13 +87,11 @@ def change_func(address_book):
         return f'You changed the number to {phone} for {name}.'
     return 'Use the add command, please.'
 
-
 def show_func(address_book):
     contacts_list = ''
     for record in address_book.data.values():
         contacts_list += f'{record.name.value} : {record.phones} \n'
     return contacts_list
-
 
 def main():
     address_book = AddressBook()
@@ -119,7 +115,6 @@ def main():
 
         result = COMMANDS.get(command, lambda: 'Unknown command!')()
         print(result)
-
 
 if __name__ == '__main__':
     main()
