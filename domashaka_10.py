@@ -33,7 +33,7 @@ class Phone(Field):
 class Record:
     def __init__(self, name):
         self.name = Name(name)
-        self.phones = Phone()
+        self.phones =  [Phone(phone_1)]
 
     def add_phone(self, phone):
         self.phones.add_phone(phone)
