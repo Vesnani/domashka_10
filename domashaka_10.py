@@ -1,5 +1,8 @@
+from collections import UserDict
+
+
 class Field:
-    def __init__(self, value=None):
+    def __init__(self, value):
         self.value = value
 
 
@@ -9,21 +12,19 @@ class Name(Field):
 
 class Phone(Field):
     def add_phone(self, phone):
-        if self.value is None:
-            self.value = []
-        self.value.append(phone)
+        self.value = phone
 
     def remove_phone(self, phone):
         if self.value is not None and phone in self.value:
             self.value.remove(phone)
 
-
 class Record:
-    def __init__(self, name):
+    def __init__(self, name, phone):
         self.name = Name(name)
-        self.phones = [Phone()]
+        self.phones = [Phone(phone)]
 
-    def add_phone(self, phone):
+    def add_contact(self, name, phone):
+        self.name.value = name
         for phone_index in self.phones:
             phone_index.add_phone(phone)
 
@@ -31,24 +32,18 @@ class Record:
         for phone_index in self.phones:
             phone_index.remove_phone(phone)
 
-    def edit_name(self, name):
-        self.name.edit(name)
 
     def __str__(self):
         phone_numbers = ', '.join(str(phone) for phone in self.phones[0].value)
         return f"Name: {self.name}\nPhones: {phone_numbers}"
 
 
-class AddressBook:
-    def __init__(self):
-        self.data = {}
+class AddressBook(UserDict):
 
-    def add_record(self, record):
-        if record.name.value in self.data:
-            existing_record = self.data[record.name.value]
-            existing_record.add_phone(record.phones[0].value[0])
-        else:
-            self.data[record.name.value] = record
+    def add_record(self, name, phone):
+        record = Record(name, phone)
+        record.add_contact(name, phone)
+        self.data[record.name.value] = record
 
     def delete_record(self, name):
         if name in self.data:
@@ -71,24 +66,28 @@ def exit_func():
 
 
 def add_func(address_book, name, phone):
-    record = Record(name)
-    record.add_phone(phone)
-    address_book.add_record(record)
+    record = Record(name, phone)
+    address_book.add_record(name, phone)
     return f'You added a new contact: {name}: {phone}.'
 
 
 def change_func(address_book, name, phone):
     if name in address_book.data:
         record = address_book.data[name]
-        record.phones[0].value = [phone]  # Замінюємо список номерів на новий список з одним номером
+        if len(record.phones) > 0:
+            record.phones[0].value = [phone]
+        else:
+            record.phones.append(Phone([phone]))
         return f'You changed the number to {phone} for {name}.'
     return 'Use the add command, please.'
-
 
 def show_func(address_book):
     contacts_list = ''
     for record in address_book.data.values():
-        phone_numbers = ', '.join(str(phone) for phone in record.phones[0].value)
+        if len(record.phones) > 0:
+            phone_numbers = ', '.join(str(phone) for phone in record.phones[0].value)
+        else:
+            phone_numbers = 'No phone numbers'
         contacts_list += f'{record.name.value} : [{phone_numbers}]\n'
     return contacts_list
 
@@ -102,7 +101,8 @@ def main():
         'close': exit_func,
         'good bye': exit_func,
         'add': lambda: add_func(address_book, input('Enter name: '), input('Enter phone: ')),
-        'change': lambda: change_func(address_book, input('Enter name you want to change: '), input('Enter new phone: ')),
+        'change': lambda: change_func(address_book, input('Enter name you want to change: '),
+                                      input('Enter new phone: ')),
         'show all': lambda: show_func(address_book),
     }
 
