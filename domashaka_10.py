@@ -11,85 +11,90 @@ class Name(Field):
 
 
 class Phone(Field):
-    def add_phone(self, phone):
-        self.value = phone
+    pass
 
-    def remove_phone(self, phone):
-        if self.value is not None and phone in self.value:
-            self.value.remove(phone)
 
 class Record:
-    def __init__(self, name, phone):
+    def __init__(self, name):
         self.name = Name(name)
-        self.phones = [Phone(phone)]
+        self.phones = []
 
-    def add_contact(self, name, phone):
-        self.name.value = name
-        for phone_index in self.phones:
-            phone_index.add_phone(phone)
+    def get_info(self):
+        phones_info = ''
 
-    def remove_phone(self, phone):
-        for phone_index in self.phones:
-            phone_index.remove_phone(phone)
+        for phone in self.phones:
+            phones_info += f'{phone.value}, '
+            return f'{self.name.value} : {phones_info[:-2]}'
 
+    def add_phone(self, phone):
+        self.phones.append(Phone(phone))
 
-    def __str__(self):
-        phone_numbers = ', '.join(str(phone) for phone in self.phones[0].value)
-        return f"Name: {self.name}\nPhones: {phone_numbers}"
+    def delete_phone(self, phone):
+        for record_phone in self.phones:
+            if record_phone.value == phone:
+                self.phones.remove(record_phone)
+                return True
+        return False
+
+    def change_phones(self, phones):
+        for phone in phones:
+            if not self.delete_phone(phone):
+                self.add_phone(phone)
 
 
 class AddressBook(UserDict):
-
-    def add_record(self, name, phone):
-        record = Record(name, phone)
-        record.add_contact(name, phone)
+    def add_record(self, record):
         self.data[record.name.value] = record
 
-    def delete_record(self, name):
-        if name in self.data:
-            del self.data[name]
+    def get_all_record(self):
+        return self.data
 
-    def search_records(self, search_term):
-        results = []
-        for record in self.data.values():
-            if search_term.lower() in record.name.value.lower():
-                results.append(record)
-        return results
+    def has_record(self, name):
+        return bool(self.data.get(name))
 
+    def get_record(self, name) -> Record:
+        return self.data.get(name)
+
+    def remove_record(self, name):
+        del self.data[name]
+
+    def search(self, value):
+        if self.has_record(value):
+            return self.get_record(value)
+
+        for record in self.get_all_record().values():
+            for phone in record.phones:
+                if phone.value == value:
+                    return record
+
+        raise ValueError("Contact with this value does not exist.")
 
 def hello_func():
-    return 'How can I help you?'
-
+    return 'Hello!'
 
 def exit_func():
-    return 'Good bye!'
+    return 'Goodbye!'
 
+def add_record(address_book, name, phone):
+    record = Record(name)
+    record.add_phone(phone)
+    address_book.add_record(record)
+    return f'Record added: {name} - {phone}'
 
-def add_func(address_book, name, phone):
-    record = Record(name, phone)
-    address_book.add_record(name, phone)
-    return f'You added a new contact: {name}: {phone}.'
-
-
-def change_func(address_book, name, phone):
-    if name in address_book.data:
-        record = address_book.data[name]
-        if len(record.phones) > 0:
-            record.phones[0].value = [phone]
-        else:
-            record.phones.append(Phone([phone]))
-        return f'You changed the number to {phone} for {name}.'
-    return 'Use the add command, please.'
+def change_func(address_book, name, new_phone):
+    record = address_book.get_record(name)
+    if record:
+        record.change_phones([new_phone])
+        return f'Phone number changed for {name}: {new_phone}'
+    else:
+        return f'Record not found for name: {name}'
 
 def show_func(address_book):
-    contacts_list = ''
-    for record in address_book.data.values():
-        if len(record.phones) > 0:
-            phone_numbers = ', '.join(str(phone) for phone in record.phones[0].value)
-        else:
-            phone_numbers = 'No phone numbers'
-        contacts_list += f'{record.name.value} : [{phone_numbers}]\n'
-    return contacts_list
+    all_records = address_book.get_all_record()
+    if all_records:
+        return 'All records:\n' + '\n'.join([record.get_info() for record in all_records.values()])
+    else:
+        return 'No records found'
 
 
 def main():
@@ -100,7 +105,7 @@ def main():
         'exit': exit_func,
         'close': exit_func,
         'good bye': exit_func,
-        'add': lambda: add_func(address_book, input('Enter name: '), input('Enter phone: ')),
+        'add': lambda: add_record(address_book, input('Enter name: '), input('Enter phone: ')),
         'change': lambda: change_func(address_book, input('Enter name you want to change: '),
                                       input('Enter new phone: ')),
         'show all': lambda: show_func(address_book),
@@ -114,7 +119,6 @@ def main():
 
         result = COMMANDS.get(command, lambda: 'Unknown command!')()
         print(result)
-
 
 if __name__ == '__main__':
     main()
